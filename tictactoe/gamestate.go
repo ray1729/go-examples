@@ -1,6 +1,10 @@
 package tictactoe
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/google/uuid"
+)
 
 // Assuming a 3x3 grid like so:
 // 0 | 1 | 2
@@ -32,14 +36,13 @@ func init() {
 	}
 }
 
-type Player struct {
-	Name string
+type Player interface {
+	Id() uuid.UUID
+	NextMove(g GameState) uint8
 }
 
 type GameState struct {
-	Players []Player
-	Moves   []uint8
-	Winner  *int
+	Moves []uint8
 }
 
 func Bitmask(xs []uint8, start, step int) uint16 {
@@ -60,18 +63,18 @@ func (g GameState) HasWon(player int) bool {
 	return false
 }
 
+func (g GameState) IsGameOver() bool {
+	return len(g.Moves) == 9 || g.HasWon(0) || g.HasWon(1)
+}
+
 func (g GameState) Play(move uint8) (GameState, error) {
 	if move < 0 || move > 8 || Bitmask(g.Moves, 0, 1)&(1<<move) != 0 {
 		return g, fmt.Errorf("Illegal move: %d", move)
 	}
-	if g.Winner != nil {
-		return g, fmt.Errorf("Game over, player %d won", *g.Winner)
+	if g.IsGameOver() {
+		return g, fmt.Errorf("This game is over")
 	}
-	player := len(g.Moves) % 2
 	g.Moves = append(g.Moves, move)
-	if g.HasWon(player) {
-		g.Winner = &player
-	}
 	return g, nil
 }
 
@@ -84,4 +87,35 @@ func (g GameState) AvailableMoves() []uint8 {
 		}
 	}
 	return moves
+}
+
+func PlayerSymbol(player int) string {
+	if player % 2 == 0 {
+		return "X"
+	}
+	return "O"
+}
+
+func (g GameState) FormatGrid() string {
+	xs := []interface{}{" ", " ", " ", " ", " ", " ", " ", " ", " "}
+	for i, p := range g.Moves {
+		xs[p] = PlayerSymbol(i)
+	}
+	return fmt.Sprintf(" %s | %s | %s\n---+---+---\n %s | %s | %s\n---+---+---\n %s | %s | %s\n", xs...)
+}
+
+func (g GameState) Status() string {
+	for p := 0; p < 2; p++ {
+		if g.HasWon(p) {
+			return fmt.Sprintf("%s's won", PlayerSymbol(p))
+		}
+	}
+	if len(g.Moves) == 9 {
+		return "It's a draw"
+	}
+	return fmt.Sprintf("%s to play", PlayerSymbol(len(g.Moves)))
+}
+
+func (g GameState) String() string {
+	return g.FormatGrid() + "\n" + g.Status() + "\n"
 }

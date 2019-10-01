@@ -1,8 +1,10 @@
 package tictactoe
 
 import (
-	"github.com/stretchr/testify/assert"
+	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGameState(t *testing.T) {
@@ -11,9 +13,10 @@ func TestGameState(t *testing.T) {
 	var err error
 	for _, m := range moves {
 		g, err = g.Play(m)
+		fmt.Println(g)
 		assert.Nil(t, err)
 	}
-	assert.Equal(t, 0, *g.Winner, "Player 0 wins")
+	assert.Equal(t, "X's won", g.Status(), "Player 0 wins")
 }
 
 func TestAvailableMoves(t *testing.T) {
