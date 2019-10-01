@@ -3,20 +3,17 @@ package tictactoe
 import "fmt"
 
 func GameLoop(player1, player2 Player) GameState {
-	game := GameState{}
+	state := GameState{}
 	players := [2]Player{player1, player2}
-	for !game.IsGameOver() {
-		player := players[len(game.Moves) % 2]
-		for {
-			move := player.NextMove(game)
-			nextState, err := game.Play(move)
-			if err != nil {
-				fmt.Println(err)
-				continue
-			}
-			game = nextState
-			break
+	for !state.IsGameOver() {
+		player := players[len(state.Moves) % 2]
+		move := player.NextMove(state)
+		nextState, err := state.Play(move)
+		if err != nil {
+			fmt.Println(err)
+			continue
 		}
+		state = nextState
 	}
-	return game
+	return state
 }
